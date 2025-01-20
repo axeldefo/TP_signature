@@ -33,12 +33,43 @@ public class MyPassword {
 		}
 	}
 
+	public boolean equals(Object pPass) {
+		if (pPass instanceof MyPassword) {
+			return this.password.equals(((MyPassword) pPass).getPassword());
+		}
+		return false;
+	}
+
+	// Méthode de contrôle d'accès
+	public boolean controleAcces(String pPass) {
+		// Crée un nouvel objet MyPassword pour le mot de passe saisi
+		MyPassword myPasswordControleAcces = new MyPassword(pPass);
+		// Compare les hachés des deux mots de passe
+		return this.equals(myPasswordControleAcces);
+	}
+
 	public static void main(String[] args) {
 		System.out.println("Veuillez définir un mot de passe : ");
-		Scanner scanner = new Scanner( System.in );
+		Scanner scanner = new Scanner(System.in);
 		String passString = scanner.nextLine();
+
+		// Création de l'objet MyPassword
 		MyPassword myPassword = new MyPassword(passString);
 		System.out.println(myPassword);
+
+		// Demander la confirmation pour le contrôle d'accès
+		System.out.println("Veuillez saisir votre mot de passe pour vous connecter : ");
+		String passConfirmation = scanner.nextLine();
+
+		// Tester le contrôle d'accès
+		if (myPassword.controleAcces(passConfirmation)) {
+			System.out.println("Succès : Mot de passe correct !");
+		} else {
+			System.out.println("Échec : Mot de passe incorrect.");
+		}
+
+		// Fermer le scanner
+		scanner.close();
 	}
 
 }
