@@ -60,7 +60,7 @@ public class MyFirstSignature {
 
 
     // Méthode pour signer le message
-    public byte[] sign() {
+    public byte[] sign() throws Exception {
         try {
             // Étape 1 : Hachage du message
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
