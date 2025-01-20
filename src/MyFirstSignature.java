@@ -2,6 +2,7 @@ import util.ByteToHex;
 
 import javax.crypto.Cipher;
 import java.security.*;
+import java.util.Arrays;
 
 public class MyFirstSignature {
     protected String myMessage;
@@ -42,6 +43,22 @@ public class MyFirstSignature {
         return null;
     }
 
+    // Méthode pour déchiffrer avec la clé publique
+    private byte[] decrypt(byte[] pCondensat) throws Exception {
+        // Crée une instance de Cipher pour RSA en mode déchiffrement
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, publicKey); // Initialisation en mode déchiffrement avec la clé publique
+
+        // Déchiffre le condensat signé
+        byte[] decrypted = cipher.doFinal(pCondensat);
+
+        // Affiche la chaîne déchiffrée
+        System.out.println("Déchiffrement du condensat : " + new String(decrypted));
+
+        return decrypted;
+    }
+
+
     // Méthode pour signer le message
     public byte[] sign() {
         try {
@@ -57,20 +74,32 @@ public class MyFirstSignature {
         return null;
     }
 
+    // Méthode pour vérifier la signature
+    public boolean verifySignature(byte[] pCondensat) throws Exception {
+        // 1) Haché du message original
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        byte[] messageHash = messageDigest.digest(myMessage.getBytes());
+
+        // 2) Déchiffrement du condensat signé avec la clé publique
+        byte[] decryptedCondensat = decrypt(pCondensat);
+
+        // 3) Comparaison des deux hachés
+        return Arrays.equals(messageHash, decryptedCondensat);
+    }
+
+
     // Méthode principale pour tester
-    public static void main(String[] args) {
-        // Instanciation de l'objet avec le message à signer
-        MyFirstSignature mySignature = new MyFirstSignature("Je signe un message électroniquement");
+    public static void main(String[] args) throws Exception {
+        // Création de l'objet MyFirstSignature avec le message à signer
+        MyFirstSignature lFirstSignature = new MyFirstSignature("Je signe un message électroniquement");
 
         // Génération de la signature
-        byte[] signature = mySignature.sign();
+        byte[] lTabByteResSignature = lFirstSignature.sign();
 
-        // Affichage du résultat en hexadécimal
-        if (signature != null) {
-            System.out.println("La signature du message [" + mySignature.myMessage + "] est :");
-            System.out.println(ByteToHex.convert(signature));
-        } else {
-            System.out.println("Erreur lors de la génération de la signature.");
-        }
+        // Vérification de la signature
+        boolean lValide = lFirstSignature.verifySignature(lTabByteResSignature);
+
+        // Affichage du résultat
+        System.out.println("La signature est " + (lValide ? "Valide" : "Invalide"));
     }
 }
