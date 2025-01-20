@@ -7,6 +7,9 @@ import com.itextpdf.signatures.SignatureUtil;
 import com.itextpdf.signatures.SignerProperties;
 import com.itextpdf.signatures.PrivateKeySignature;
 import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.forms.form.element.SignatureFieldAppearance;
+import com.itextpdf.forms.fields.properties.SignedAppearanceText;
+import com.itextpdf.kernel.geom.Rectangle;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -101,15 +104,32 @@ public class MySignaturePadesPdf {
             // Create PdfPadesSigner with reader and output stream
             PdfPadesSigner signer = new PdfPadesSigner(reader, fos);
 
-            // Create SignerProperties and set reason and location
+            // Create SignedAppearanceText instance (s2)
+            SignedAppearanceText s2 = new SignedAppearanceText();
+            s2.setSignedBy(certificate.getSubjectDN().toString());
+            s2.setReasonLine(pRaisonSignature);
+            s2.setLocationLine(pLieuSignature);
+
+            // Create SignatureFieldAppearance instance (s1) and set its content
+            SignatureFieldAppearance s1 = new SignatureFieldAppearance("Signature1");
+            s1.setContent(s2);
+
+            // Create SignerProperties and configure it
             SignerProperties signerProperties = new SignerProperties();
             signerProperties.setReason(pRaisonSignature);
             signerProperties.setLocation(pLieuSignature);
 
+            // Set the signature appearance
+            signerProperties.setSignatureAppearance(s1);
+
+            // Define the signature rectangle
+            Rectangle signatureRect = new Rectangle(350, 650, 200, 60);
+            signerProperties.setPageRect(signatureRect);
+
             // Sign with PAdES Baseline-B profile using private key and certificate chain
             signer.signWithBaselineBProfile(signerProperties, certificateChain, privateKey);
 
-            System.out.println("Le fichier PDF a été signé avec succès !");
+            System.out.println("Le fichier PDF a été signé avec succès avec une signature visible !");
 
         } catch (Exception e) {
             e.printStackTrace();
