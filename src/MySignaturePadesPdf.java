@@ -2,6 +2,11 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.signatures.PdfPadesSigner;
+import com.itextpdf.signatures.SignatureUtil;
+import com.itextpdf.signatures.SignerProperties;
+import com.itextpdf.signatures.PrivateKeySignature;
+import com.itextpdf.kernel.pdf.PdfReader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,8 +18,8 @@ import java.security.cert.X509Certificate;
 import java.security.Security;
 import java.util.Enumeration;
 import java.util.Scanner;
-
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import com.itextpdf.signatures.CertificateUtil;
 
 public class MySignaturePadesPdf {
 
@@ -84,6 +89,31 @@ public class MySignaturePadesPdf {
         }
     }
 
+    // Méthode pour signer le PDF avec le certificat et la clé privée en PAdES B-B
+    public void signerPdf(String pOutFile) {
+        try {
+            // Create PdfReader for the source PDF
+            PdfReader reader = new PdfReader(SRC_PDF);
+
+            // Create FileOutputStream for the destination file
+            FileOutputStream fos = new FileOutputStream(pOutFile);
+
+            // Create PdfPadesSigner with reader and output stream
+            PdfPadesSigner signer = new PdfPadesSigner(reader, fos);
+
+            // Create SignerProperties
+            SignerProperties signerProperties = new SignerProperties();
+
+            // Sign with PAdES Baseline-B profile using private key and certificate chain
+            signer.signWithBaselineBProfile(signerProperties, certificateChain, privateKey);
+
+            System.out.println("Le fichier PDF a été signé avec succès !");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         // Demande du mot de passe à l'utilisateur
         String p12File = "C:\\Users\\axeld\\OneDrive\\Documents\\cyber\\TP_Signature\\src\\AxelDefo_cert_sign.p12";
@@ -104,5 +134,8 @@ public class MySignaturePadesPdf {
 
         // Appel de la méthode pour générer le PDF
         pdfGenerator.generatePdf();
+
+        // Appel de la méthode pour signer le PDF
+        pdfGenerator.signerPdf(SRC_PDF + "-B_B.pdf");
     }
 }
