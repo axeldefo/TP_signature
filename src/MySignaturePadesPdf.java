@@ -90,7 +90,7 @@ public class MySignaturePadesPdf {
     }
 
     // Méthode pour signer le PDF avec le certificat et la clé privée en PAdES B-B
-    public void signerPdf(String pOutFile) {
+    public void signerPdf(String pOutFile, String pRaisonSignature, String pLieuSignature) {
         try {
             // Create PdfReader for the source PDF
             PdfReader reader = new PdfReader(SRC_PDF);
@@ -101,8 +101,10 @@ public class MySignaturePadesPdf {
             // Create PdfPadesSigner with reader and output stream
             PdfPadesSigner signer = new PdfPadesSigner(reader, fos);
 
-            // Create SignerProperties
+            // Create SignerProperties and set reason and location
             SignerProperties signerProperties = new SignerProperties();
+            signerProperties.setReason(pRaisonSignature);
+            signerProperties.setLocation(pLieuSignature);
 
             // Sign with PAdES Baseline-B profile using private key and certificate chain
             signer.signWithBaselineBProfile(signerProperties, certificateChain, privateKey);
@@ -113,7 +115,6 @@ public class MySignaturePadesPdf {
             e.printStackTrace();
         }
     }
-
     public static void main(String[] args) {
         // Demande du mot de passe à l'utilisateur
         String p12File = "C:\\Users\\axeld\\OneDrive\\Documents\\cyber\\TP_Signature\\src\\AxelDefo_cert_sign.p12";
@@ -136,6 +137,8 @@ public class MySignaturePadesPdf {
         pdfGenerator.generatePdf();
 
         // Appel de la méthode pour signer le PDF
-        pdfGenerator.signerPdf(SRC_PDF + "-B_B.pdf");
+        String raison = "Validation du document";
+        String lieu = "Le Mans, France";
+        pdfGenerator.signerPdf(SRC_PDF + "-B_B.pdf", raison, lieu);
     }
 }
