@@ -1,3 +1,4 @@
+import java.nio.charset.StandardCharsets;
 import java.security.Signature;
 
 public class MySecondSignature extends  MyFirstSignature {
@@ -22,36 +23,46 @@ public class MySecondSignature extends  MyFirstSignature {
         return signature.sign();
     }
 
-    // Méthode pour vérifier la signature en utilisant JCA Signature
-    public boolean verifySignatureWithJCA(byte[] signedData) throws Exception {
-        // Création de l'objet Signature pour l'algorithme RSA
-        Signature signature = Signature.getInstance("SHA256withRSA");
+    // Surcharge de la méthode verifySignature
+    @Override
+    public boolean verifySignature(byte[] pCondensat) {
+        try {
+            // Initialisation de l'objet Signature avec l'algorithme SHA256withRSA
+            Signature signature = Signature.getInstance("SHA256WithRSA");
 
-        // Initialisation avec la clé publique
-        signature.initVerify(this.publicKey);
+            // Initialisation avec la clé publique du signataire pour la vérification
+            signature.initVerify(publicKey);
 
-        // Hachage du message
-        byte[] messageBytes = this.myMessage.getBytes();
-        signature.update(messageBytes);
+            // Injection des octets du message à vérifier
+            String message = "Je signe un message électroniquement";
+            signature.update(message.getBytes("UTF-8"));
 
-        // Vérification de la signature
-        return signature.verify(signedData);
+            // Vérification du condensat signé
+            return signature.verify(pCondensat);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
+
 
     public static void main(String[] args) {
         try {
-            // Création d'un objet MySecondSignature avec le message
-            MySecondSignature mySecondSignature = new MySecondSignature("Je signe un message électroniquement");
 
-            // Générer la signature
+            // Message à signer
+            String message = "Je signe un message électroniquement";
+
+            // Instanciation de l'objet MySecondSignature
+            MySecondSignature mySecondSignature = new MySecondSignature(message);
+
+            // Appel de la méthode sign() pour obtenir la signature du message
             byte[] signedMessage = mySecondSignature.sign();
 
-            // Affichage de la signature en hexadécimal
-            System.out.print("La signature du message: [Je signe un message électroniquement] est : ");
-            for (byte b : signedMessage) {
-                System.out.printf("%02x ", b);
-            }
-            System.out.println(); // Retour à la ligne après l'affichage
+            // Appel de la méthode verifySignature() pour vérifier la signature
+            boolean isValid = mySecondSignature.verifySignature(signedMessage);
+
+            // Affichage du résultat de la vérification
+            System.out.println("La signature est " + (isValid ? "Valide" : "Invalide"));
         } catch (Exception e) {
             e.printStackTrace();
         }
