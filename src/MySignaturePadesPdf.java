@@ -2,10 +2,7 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.signatures.PdfPadesSigner;
-import com.itextpdf.signatures.SignatureUtil;
-import com.itextpdf.signatures.SignerProperties;
-import com.itextpdf.signatures.PrivateKeySignature;
+import com.itextpdf.signatures.*;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.forms.form.element.SignatureFieldAppearance;
 import com.itextpdf.forms.fields.properties.SignedAppearanceText;
@@ -22,9 +19,12 @@ import java.security.Security;
 import java.util.Enumeration;
 import java.util.Scanner;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import com.itextpdf.signatures.CertificateUtil;
 
 public class MySignaturePadesPdf {
+
+
+    /** Types de signature PADES possible */
+    public enum PadesSignatureEnum { B_B, B_T };
 
     // Attributs pour stocker la clé privée, le certificat et la chaîne de certificats
     private PrivateKey privateKey;
@@ -93,7 +93,8 @@ public class MySignaturePadesPdf {
     }
 
     // Méthode pour signer le PDF avec le certificat et la clé privée en PAdES B-B
-    public void signerPdf(String pOutFile, String pRaisonSignature, String pLieuSignature) {
+    // Updated signature method with PAdES type parameter
+    public void signerPdf(PadesSignatureEnum pPadesEnum, String pOutFile, String pRaisonSignature, String pLieuSignature) {
         try {
             // Create PdfReader for the source PDF
             PdfReader reader = new PdfReader(SRC_PDF);
@@ -126,10 +127,33 @@ public class MySignaturePadesPdf {
             Rectangle signatureRect = new Rectangle(350, 650, 200, 60);
             signerProperties.setPageRect(signatureRect);
 
-            // Sign with PAdES Baseline-B profile using private key and certificate chain
+            {/**Sign with PAdES Baseline-B profile using private key and certificate chain
             signer.signWithBaselineBProfile(signerProperties, certificateChain, privateKey);
 
-            System.out.println("Le fichier PDF a été signé avec succès avec une signature visible !");
+            System.out.println("Le fichier PDF a été signé avec succès avec une signature visible !"); **/}
+
+            // Traitement suivant format PADES demandé
+            switch (pPadesEnum) {
+                case B_B:
+                    // Signature PAdES B-B
+                    signer.signWithBaselineBProfile(signerProperties, certificateChain, privateKey);
+                    System.out.println("Le fichier PDF a été signé avec succès en PAdES B-B !");
+                    break;
+
+                case B_T:
+                    // Signature PAdES B-T avec horodatage
+                    // Create TSA client for timestamping
+                    TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle(
+                            "http://timestamp.digicert.com",
+                            "", // empty string for username if not required
+                            ""  // empty string for password if not required
+                    );
+
+                    // Sign with PAdES Baseline-T profile
+                    signer.signWithBaselineTProfile(signerProperties, certificateChain, privateKey, tsaClient);
+                    System.out.println("Le fichier PDF a été signé avec succès en PAdES B-T avec horodatage !");
+                    break;
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -159,6 +183,9 @@ public class MySignaturePadesPdf {
         // Appel de la méthode pour signer le PDF
         String raison = "Validation du document";
         String lieu = "Le Mans, France";
-        pdfGenerator.signerPdf(SRC_PDF + "-B_B.pdf", raison, lieu);
+        for (PadesSignatureEnum lType : PadesSignatureEnum.values()) {
+            String outFile = SRC_PDF + "-" + lType.name() + ".pdf";
+            pdfGenerator.signerPdf(lType, outFile, raison, lieu);
+        }
     }
 }
